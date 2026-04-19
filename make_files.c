@@ -51,21 +51,6 @@ int add_report(const char *district_name,Report *new_report) {
 
     snprintf(file_path,sizeof(file_path),"%s/reports.dat",district_name);
 
-    struct stat st;
-
-    if (stat(file_path,&st) == 0) {
-        if(!S_ISREG(st.st_mode)) {
-            fprintf(stderr,"Error: %s is not a regular file\n",file_path);
-            return -1;
-        }
-        mode_t permissions = st.st_mode & 0777;
-
-        if (permissions != 0644) {
-            fprintf(stderr,"Incorrect permissions\n");
-            chmod(file_path,0644);
-        }
-    }
-    
 
 
     int fd = open(file_path,O_WRONLY|O_CREAT|O_APPEND,0664);
@@ -76,17 +61,18 @@ int add_report(const char *district_name,Report *new_report) {
     }
     if (chmod(file_path,0644) == -1) {
         perror ("Error setting report file permissions\n");
+        close(fd);
         return -1;
     }
+
     ssize_t bytes_written = write(fd,new_report,sizeof(Report));
 
-    if (bytes_written == -1) {
+    if (bytes_written != sizeof(Report)) {
         perror("Error writing report to file");
         close(fd);
         return -1;
     }
     close(fd);
-
     printf("Report %d added successfully \n",new_report->id);
     return 0;
 }
@@ -141,4 +127,84 @@ void list_district(const char *district_id){
     }
     close(fd);
     printf("--------------\n");
+}
+void view_report(const char *district_id,int targe_id) {
+    char file_path[LENGTH];
+    snprintf(file_path,sizeof(file_path),"%s/reports.dat",district_id);
+
+    int fd  = open(file_path,O_RDONLY);
+    if(fd == -1) {
+        perror("Error opening the file");
+        return;
+    }
+
+    Report r;
+    int found = 0;
+    while (read (fd,&r,sizeof(Report)) > 0) {
+        if (r.id == targe_id) {
+            found = 1;
+            break;
+        }
+    }
+    if (found) {
+        printf("\n--- Report Details [ID: %d] ---\n", r.id);
+        printf("Inspector:   %s\n", r.inspector);
+        printf("Location:    Lat: %.4f, Long: %.4f\n", r.latitude, r.longitude);
+        printf("Category:    %s\n", r.category);
+        printf("Severity:    %d\n", r.severity);
+        printf("Timestamp:   %s", ctime(&r.timestamp)); // ctime returns a string with \n
+        printf("Description: %s\n", r.description);
+        printf("-------------------------------\n");
+
+    } else {
+        printf("No report found\n");
+    }
+    close(fd);
+}
+
+void remove_report(const char *district_id,int target_id) {
+    char file_path[LENGTH];
+    snprintf(file_path,sizeof(file_path),"%s/reports.dat",district_id);
+
+    int fd = open(file_path,O_RDWR) ;
+    if (fd == -1) {
+        perror("Error opening the file");
+        return;
+    }
+    Report r;
+    int found = 0;
+    off_t offset = -1;
+    while (read(fd,&r,sizeof(Report)) > 0)
+    {
+        if (r.id == target_id) {
+            found = 1;
+            offset = lseek(fd,0,SEEK_CUR)-sizeof(Report);
+            break;
+        }
+    }
+    if (!found) {
+        printf("Report id not found");
+        close(fd);
+        return;
+    }
+    off_t read_pos = offset + sizeof(Report);
+    off_t write_pos = offset;
+    while(1) {
+
+        lseek(fd,read_pos,SEEK_SET);
+        int bytes_read = read(fd,&r,sizeof(Report));
+        if(bytes_read <= 0) break;
+        lseek (fd,write_pos,SEEK_SET);
+        write(fd,&r,sizeof(Report));
+        write_pos +=sizeof(Report);
+        read_pos += sizeof(Report);
+
+    }
+    if (ftruncate(fd,write_pos) == -1) {
+        perror("Error truncating file");
+        return;
+    } else {
+        printf("Report %d removed successfully \n",target_id);
+    }
+    close(fd);
 }

@@ -15,6 +15,6 @@ typedef struct {
     int severity;
     time_t timestamp;
     char description[MAX_DESC];
-} Report;
+} __attribute__((packed)) Report;
 
 #endif
