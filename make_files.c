@@ -6,6 +6,7 @@
 #include<unistd.h>
 #include<fcntl.h>
 #include "reports.h"
+#include<string.h>
 
 #define LENGTH 256
 
@@ -207,4 +208,76 @@ void remove_report(const char *district_id,int target_id) {
         printf("Report %d removed successfully \n",target_id);
     }
     close(fd);
+}
+void update_treshhold(const char *district_id,const char *value){
+    char cfg_path[LENGTH];
+    snprintf(cfg_path,sizeof(cfg_path),"%s/district.cfg",district_id);
+
+    // printf("Updating district %s with value %s\n",cfg_path,value);
+
+    struct stat st;
+    if (stat(cfg_path,&st) == -1) {
+        perror("Error stating district.cfg");
+        return;
+    }
+
+    if ((st.st_mode & 0777) != 0640) {
+        fprintf(stderr,"Permissions are not 0640");
+        return;
+    }
+
+    int fd = open(cfg_path,O_WRONLY|O_TRUNC);
+    if (fd == -1) {
+        perror("Error opening the file");
+        return;
+    } 
+    ssize_t bytes = write(fd,value,sizeof(value));
+    // printf("Writing %zu bytes",strlen(value));
+    
+    if (bytes == -1) {
+        perror("Error writing ");
+    } else {
+        printf("Treshold successfully updated");
+    }
+    close(fd);
+}
+
+int parse_condition(const char *input,char *field,char *op, char *value) {
+    return sscanf(input,"%[^:]:%[^:]:%s",field,op,value) == 3;
+}
+static int compare_int(long a, const char *op , long b) {
+    if (strcmp(op,"==") == 0) return a == b;
+        if(strcmp(op,"!=") == 0) return a != b;
+        if(strcmp(op,"<") == 0) return a < b;
+        if(strcmp(op,">") == 0) return a > b;
+        if(strcmp(op,"<=") == 0) return a <= b;
+        if(strcmp(op,">=") == 0) return a >= b;
+        return 0;
+
+}
+static int compare_str(const char *a, const char *op, const char *b) {
+    int cmp = strcmp(a,b);    
+    if (strcmp(op,"==") == 0) return cmp == 0;
+        if(strcmp(op,"!=") == 0) return cmp != 0;
+        if(strcmp(op,"<") == 0) return cmp < 0;
+        if(strcmp(op,">") == 0) return cmp > 0;
+        if(strcmp(op,"<=") == 0) return cmp <= 0;
+        if(strcmp(op,">=") == 0) return cmp >= 0;
+}
+
+int match_condition(Report *r,const char *field,const char* op,const char *value) {
+    
+    if (strcmp(field,"severity") == 0) {
+        return compare_int(r->severity,op,atol(value));
+    } 
+    else if (strcmp(field,"timestamp") == 0) {
+        return compare_int((long)r->timestamp,op,atol(value));
+    }
+    else if (strcmp(field,"category") == 0) {
+        return compare_str(r->category,op,value);
+    }
+    else if (strcmp(field,"inspector") == 0) {
+        return compare_str(r->inspector,op,value);
+    }
+    return 0;
 }

@@ -33,13 +33,15 @@ int main(int argc,const char **argv) {
         strcpy(action,argv[i]);
         strcpy(district,argv[++i]);
     }
+    else if (strcmp(argv[i],"--update_threshold") == 0)
+ {
+        strcpy(action,"update");
+        if(i+1 < argc) strcpy(district,argv[++i]);
+        if(i+1 < argc) strcpy(user,argv[++i]);
 
+  }
 }
 
-    if(strcmp(action,"remove") == 0 && strcmp(role,"manager")!=0) {
-        fprintf(stderr,"Acces Denied");
-        return -1;
-    }
     if(strcmp(action,"add") == 0) {
         if(init_district(district) !=0) {
         fprintf(stderr,"Init failed\n");
@@ -47,9 +49,16 @@ int main(int argc,const char **argv) {
     }
 
 Report r;
+memset(&r,0,sizeof(Report));
+
 r.id = 101;
 strncpy(r.inspector,user,sizeof(r.inspector)-1);
+r.latitude=12.1211;
+r.longitude=2.213;
+strncpy(r.category, "Roads", sizeof(r.category) - 1);
 r.severity = 2;
+r.timestamp = time(NULL);
+strncpy(r.description, "Pothole repair required.", sizeof(r.description) - 1);
 
 
     if(add_report(district,&r) != 0) {
@@ -64,7 +73,20 @@ r.severity = 2;
         view_report(district,report_id);
     }
     else if (strcmp(action,"remove") == 0) {
+        if (strcmp(role,"manager") !=0) {
+            fprintf(stderr,"Acess Denied\n");
+            return -1;
+        } else {
         remove_report(district,report_id);
+        }
     }
+    else if (strcmp(action,"update") == 0) {
+        if (strcmp(role,"manager")!=0) {
+            fprintf(stderr,"Access Denied\n");
+            return -1;
+        }else {
+            update_treshhold(district,user);
+    }
+}
     return 0;
 }
