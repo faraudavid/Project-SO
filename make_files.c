@@ -7,10 +7,57 @@
 #include<fcntl.h>
 #include "reports.h"
 #include<string.h>
+#include<dirent.h>
 
 #define LENGTH 256
+#define SIZE_PATH 1024
 
+void setup_links(const char *base_dir) {
+    DIR *dir = opendir(base_dir);
+    if (!dir) {
+        perror("Could not open base directory");
+        return;
+    }
 
+    struct dirent *entry;
+    struct stat st;
+    char district_path[SIZE_PATH];
+    char report_path[SIZE_PATH + 32];
+    char link_name[SIZE_PATH + 32];
+
+    while ((entry = readdir(dir)) != NULL) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+        if(entry->d_name[0]=='.') continue;
+        snprintf(district_path, sizeof(district_path), "%s/%s", base_dir, entry->d_name);
+
+        if (lstat(district_path, &st) == -1) continue;
+
+    
+        if (S_ISDIR(st.st_mode)) {
+        
+            snprintf(report_path, sizeof(report_path), "%s/reports.dat", entry->d_name);
+
+            snprintf(link_name, sizeof(link_name), "active_reports-%s", entry->d_name);
+
+            struct stat lnk_stat;
+        
+            if (lstat(link_name, &lnk_stat) == 0) {
+                if (stat(link_name, &lnk_stat) == -1) {
+                    fprintf(stderr, "Warning: Dangling link detected for %s. Recreating...\n", entry->d_name);
+                    unlink(link_name); 
+                    symlink(report_path, link_name);
+                }
+            } else {
+                if (symlink(report_path, link_name) == 0) {
+                    printf("Link created: %s -> %s\n", link_name, report_path);
+                }
+            }
+        }
+    }
+    closedir(dir);
+}
 int init_district(const char *district_name) {
     if (mkdir(district_name,0750) == -1) {
         if (errno != EEXIST) {
@@ -44,6 +91,7 @@ int init_district(const char *district_name) {
         close(fd);
     }
     printf("District '%s' \n",district_name);
+    setup_links(".");
     return 0;
 } 
 

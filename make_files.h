@@ -11,4 +11,5 @@ void list_district(const char *district_id);
 void view_report(const char *district_id,int targe_id);
 void remove_report(const char *district_id,int target_id);
 void update_treshhold(const char *district_id,const char *value);
+void setup_links(const char *dir_name);
 #endif
