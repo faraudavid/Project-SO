@@ -61,9 +61,7 @@ for (int i = 1; i < argc; i++) {
     }
 
 Report r;
-static int  id = -1;
-    r.id  = id;
-    id++;
+    r.id= get_id(district);
     strncpy(r.inspector,user,sizeof(r.inspector) -1) ;
     printf("Latitude: ");
     scanf("%lf",&r.latitude);
@@ -82,10 +80,12 @@ static int  id = -1;
     r.description[strcspn(r.description,"\n")] = 0;
     r.timestamp=time( NULL);
 
-
-    if(add_report(district,&r,user,role) != 0) {
-        fprintf(stderr,"Error adding the report\n");
+    if(add_report(district,&r,user,role) == 0) {
+        if (init_district(district) != 0) {
+        fprintf(stderr, "Init failed\n");
         return -1;
+    }
+    check_and_alert(r.severity,district);
     }
     }
     else if (strcmp(action,"list") == 0) {

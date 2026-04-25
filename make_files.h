@@ -14,4 +14,7 @@ void update_threshold(const char *district_id,const char *value,const char *user
 void setup_links(const char *dir_name);
 void log_operation(const char *district_id,const char *details,const char *role,const char *user,const char *op);
 void filter_reposts(const char *district_id, int argc, char *argv[]);
+int get_threshold(const char *district);
+void check_and_alert(int severity, const char *district);
+int get_id(const char *district);
 #endif

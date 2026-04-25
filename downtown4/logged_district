@@ -1,3 +1,8 @@
 [Sat Apr 25 10:15:33 2026] DETAILS ADDED report 33 |ROLE (null) | USER ! | OP ADD[Sat Apr 25 15:17:50 2026] DETAILS LIST downtown4  |ROLE manager | USER alice | OP LIST
 [Sat Apr 25 15:18:03 2026] DETAILS VIEW report 111 |ROLE manager | USER alice | OP VIEW
 [Sat Apr 25 15:18:46 2026] DETAILS LIST downtown4  |ROLE manager | USER alice | OP LIST
+[Sat Apr 25 15:38:03 2026] DETAILS ADDED report -1 |ROLE manager | USER alice | OP ADD
+[Sat Apr 25 15:41:13 2026] DETAILS ADDED report -1 |ROLE manager | USER alice | OP ADD
+[Sat Apr 25 15:42:53 2026] DETAILS LIST downtown4  |ROLE manager | USER alice | OP LIST
+[Sat Apr 25 15:52:00 2026] DETAILS ADDED report 0 |ROLE manager | USER alice | OP ADD
+[Sat Apr 25 15:52:23 2026] DETAILS LIST downtown4  |ROLE manager | USER alice | OP LIST

@@ -11,7 +11,7 @@
 
 #define LENGTH 256
 #define SIZE_PATH 1024
-#define DEFAULT_SEVERITY 5
+#define DEFAULT_SEVERITY 4
 
 void setup_links(const char *base_dir) {
     DIR *dir = opendir(base_dir);
@@ -73,6 +73,23 @@ void log_operation(const char *district_id,const char *details,const char *role,
         dprintf(fd,"[%s] DETAILS %s |ROLE %s | USER %s | OP %s\n",ts,details,role,user,op);
     close(fd);
     }
+}
+int get_id(const char *district) {
+    char path[128];
+    snprintf(path,sizeof(path),"%s/reports.dat",district);
+    int fd = open(path,O_RDONLY);
+    if (fd == -1) {
+        return 0;
+    }
+    off_t file_size = lseek(fd,0,SEEK_END);
+    if(file_size <=0) {
+        close(fd);
+        return 0;
+    }
+    lseek(fd,-sizeof(Report),SEEK_END);
+    Report last;
+    read(fd,&last,sizeof(Report));
+    return last.id+1;
 }
 int init_district(const char *district_name) {
     if (mkdir(district_name,0750) == -1) {
@@ -396,4 +413,29 @@ void filter_reposts(const char *district_id,int num_cond,char **cond_string) {
     }
     close(fd);
     
+}
+
+int get_threshold(const char *district) {
+    char path[128];
+    snprintf(path,sizeof(path),"%s/district.cfg",district);
+    int  fd = open(path,O_RDONLY);
+    int threshold = 0;
+    if (fd != -1) {
+        char buff[16];
+        int bytes_read = read(fd,buff,sizeof(buff));
+        if(bytes_read > 0) {
+            return atoi(buff);
+        }
+    close(fd);
+    }
+    return 0;
+}
+void check_and_alert(int severity, const char *district) {
+    int threshold = get_threshold(district);
+    if (severity >= threshold) {
+        printf("\n****************************************\n");
+        printf("  [!] ALERT: HIGH SEVERITY DETECTED!\n");
+        printf("  Report Severity: %d | Threshold: %d\n", severity, threshold);
+        printf("****************************************\n\n");
+    }
 }
