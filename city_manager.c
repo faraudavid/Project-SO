@@ -64,7 +64,6 @@ Report r;
 static int  id = -1;
     r.id  = id;
     id++;
-    getchar();
     strncpy(r.inspector,user,sizeof(r.inspector) -1) ;
     printf("Latitude: ");
     scanf("%lf",&r.latitude);
