@@ -362,3 +362,38 @@ int match_condition(Report *r,const char *field,const char* op,const char *value
     }
     return 0;
 }
+
+void filter_reposts(const char *district_id,int num_cond,char **cond_string) {
+    char file_path[256];
+    snprintf(file_path,sizeof(file_path),"%s/reports.dat",district_id);
+    int fd = open(file_path,O_RDONLY);
+    if(fd == -1) {
+        perror("Error opening reports file");
+        return;
+    }
+    Report r;
+    int found_any = 0;
+
+    while(read(fd,&r,sizeof(Report)) > 0) {
+        int matches_all = 1;
+        for(int i = 0 ; i  < num_cond; i++) {
+            char field[32],op[4],value[64];
+            if(parse_condition(cond_string[i],field,op,value)) {
+                if(!match_condition(&r,field,op,value)) {
+                    matches_all = 0;
+                    break;
+                }
+            }
+        }
+        if(matches_all) {
+            printf("ID: %d | Inspector: %s | Severity: %d | Category: %s\n", 
+                   r.id, r.inspector, r.severity, r.category);
+            found_any = 1;
+        }
+    }
+    if(found_any == 0) {
+        printf("No reports match\n");
+    }
+    close(fd);
+    
+}

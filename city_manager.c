@@ -3,10 +3,12 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<time.h>
-int main(int argc,const char **argv) {
+int main(int argc,char **argv) {
     setup_links(".");
     char role[32] = {0},user[32]={0},action[32]={0},district[64]={0},threshold[32]={0};
     int report_id = -1;
+    int num_conditons = 0;
+    int index_filter_start = 0;
 
 
 for (int i = 1; i < argc; i++) {
@@ -38,6 +40,18 @@ for (int i = 1; i < argc; i++) {
             strcpy(district, argv[++i]);
             strcpy(threshold, argv[++i]);
         }
+        else if (strcmp(argv[i], "--filter") == 0) {
+            if (i+2 > argc) {
+                fprintf(stderr,"Error");
+                return -1;
+            }
+            strcpy(action,"filter");
+            strcpy(district,argv[++i]);
+            index_filter_start = i+1;
+            num_conditons = argc - index_filter_start;
+            break;
+
+        }
     }
 
     if(strcmp(action,"add") == 0) {
@@ -47,8 +61,9 @@ for (int i = 1; i < argc; i++) {
     }
 
 Report r;
-    printf("Enter id: ");
-    scanf("%d",&r.id);
+static int  id = -1;
+    r.id  = id;
+    id++;
     getchar();
     strncpy(r.inspector,user,sizeof(r.inspector) -1) ;
     printf("Latitude: ");
@@ -95,7 +110,9 @@ Report r;
         }else {
             
             update_treshhold(district,threshold,user,role);
+    } 
+}else if(strcmp(action,"filter") == 0) {
+        filter_reposts(district,num_conditons,&argv[index_filter_start]);
     }
-}
     return 0;
 }
