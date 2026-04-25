@@ -11,6 +11,7 @@
 
 #define LENGTH 256
 #define SIZE_PATH 1024
+#define DEFAULT_SEVERITY 5
 
 void setup_links(const char *base_dir) {
     DIR *dir = opendir(base_dir);
@@ -58,6 +59,21 @@ void setup_links(const char *base_dir) {
     }
     closedir(dir);
 }
+void log_operation(const char *district_id,const char *details,const char *role,const char *user,const char *op) {
+    char log_path[SIZE_PATH];
+    snprintf(log_path,sizeof(log_path),"%s/logged_district",district_id);
+    int fd = open(log_path,O_WRONLY | O_APPEND | O_CREAT,0644);
+    if (fd != -1) {
+        chmod(log_path,0644);
+        time_t now = time(NULL);
+        char *ts = ctime(&now);
+        if(ts != NULL) {
+        ts[strlen(ts)-1]='\0';
+        }
+        dprintf(fd,"[%s] DETAILS %s |ROLE %s | USER %s | OP %s\n",ts,details,role,user,op);
+    close(fd);
+    }
+}
 int init_district(const char *district_name) {
     if (mkdir(district_name,0750) == -1) {
         if (errno != EEXIST) {
@@ -82,9 +98,9 @@ int init_district(const char *district_name) {
     fd = open(config_path,O_CREAT|O_WRONLY,0640);
     if (fd != -1) {
         chmod(config_path,0640);
+        dprintf(fd,"%d",DEFAULT_SEVERITY);
         close(fd);
     }
-
     fd = open(log_path,O_CREAT|O_WRONLY,0644);
     if (fd != -1) {
         chmod(log_path,0644);
@@ -95,7 +111,7 @@ int init_district(const char *district_name) {
     return 0;
 } 
 
-int add_report(const char *district_name,Report *new_report) {
+int add_report(const char *district_name,Report *new_report,const char *user,const char *role) {
     char file_path[LENGTH];
 
     snprintf(file_path,sizeof(file_path),"%s/reports.dat",district_name);
@@ -121,6 +137,10 @@ int add_report(const char *district_name,Report *new_report) {
         close(fd);
         return -1;
     }
+    char details[1024];
+    snprintf(details,sizeof(details),"ADDED report %d",new_report->id);
+    // printf("%s ->%s ->%s-> %s",district_name,details,role,user);
+    log_operation(district_name,details,role,user,"ADD");
     close(fd);
     printf("Report %d added successfully \n",new_report->id);
     return 0;
@@ -144,7 +164,7 @@ void permission_converter(mode_t mode) {
     printf("%s",str);
 }
 
-void list_district(const char *district_id){
+void list_district(const char *district_id,const char *user,const char *role){
     char file_path[256];
     snprintf(file_path,sizeof(file_path),"%s/reports.dat",district_id);
 
@@ -174,10 +194,13 @@ void list_district(const char *district_id){
     if(count == 0) {
         printf("No reports found\n");
     }
+    char details[64];
+    snprintf(details,sizeof(details),"LIST %s ",district_id);
+    log_operation(district_id,details,role,user,"LIST");
     close(fd);
     printf("--------------\n");
 }
-void view_report(const char *district_id,int targe_id) {
+void view_report(const char *district_id,int targe_id,const char *user,const char *role) {
     char file_path[LENGTH];
     snprintf(file_path,sizeof(file_path),"%s/reports.dat",district_id);
 
@@ -208,10 +231,13 @@ void view_report(const char *district_id,int targe_id) {
     } else {
         printf("No report found\n");
     }
+    char details[64];
+    snprintf(details,sizeof(details),"VIEW report %d",targe_id);
+    log_operation(district_id,details,role,user,"VIEW");
     close(fd);
 }
 
-void remove_report(const char *district_id,int target_id) {
+void remove_report(const char *district_id,int target_id,const char *user,const char *role) {
     char file_path[LENGTH];
     snprintf(file_path,sizeof(file_path),"%s/reports.dat",district_id);
 
@@ -255,9 +281,12 @@ void remove_report(const char *district_id,int target_id) {
     } else {
         printf("Report %d removed successfully \n",target_id);
     }
+    char details[64];
+    snprintf(details,sizeof(details),"REMOVED report %d",target_id);
+    log_operation(district_id,details,role,user,"REMOVE");
     close(fd);
 }
-void update_treshhold(const char *district_id,const char *value){
+void update_treshhold(const char *district_id,const char *value,const char *user,const char *role){
     char cfg_path[LENGTH];
     snprintf(cfg_path,sizeof(cfg_path),"%s/district.cfg",district_id);
 
@@ -279,7 +308,7 @@ void update_treshhold(const char *district_id,const char *value){
         perror("Error opening the file");
         return;
     } 
-    ssize_t bytes = write(fd,value,sizeof(value));
+    ssize_t bytes = write(fd,value,strlen(value));
     // printf("Writing %zu bytes",strlen(value));
     
     if (bytes == -1) {
@@ -287,6 +316,9 @@ void update_treshhold(const char *district_id,const char *value){
     } else {
         printf("Treshold successfully updated");
     }
+    char details[64];
+    snprintf(details,sizeof(details),"UPDATED  %s",district_id);
+    log_operation(district_id,details,role,user,"UPDATE");
     close(fd);
 }
 
@@ -311,6 +343,7 @@ static int compare_str(const char *a, const char *op, const char *b) {
         if(strcmp(op,">") == 0) return cmp > 0;
         if(strcmp(op,"<=") == 0) return cmp <= 0;
         if(strcmp(op,">=") == 0) return cmp >= 0;
+return 0;
 }
 
 int match_condition(Report *r,const char *field,const char* op,const char *value) {
