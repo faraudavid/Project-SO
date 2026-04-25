@@ -109,7 +109,7 @@ static int  id = -1;
             return -1;
         }else {
             
-            update_treshhold(district,threshold,user,role);
+            update_threshold(district,threshold,user,role);
     } 
 }else if(strcmp(action,"filter") == 0) {
         filter_reposts(district,num_conditons,&argv[index_filter_start]);

@@ -286,7 +286,7 @@ void remove_report(const char *district_id,int target_id,const char *user,const 
     log_operation(district_id,details,role,user,"REMOVE");
     close(fd);
 }
-void update_treshhold(const char *district_id,const char *value,const char *user,const char *role){
+void update_threshold(const char *district_id,const char *value,const char *user,const char *role){
     char cfg_path[LENGTH];
     snprintf(cfg_path,sizeof(cfg_path),"%s/district.cfg",district_id);
 
