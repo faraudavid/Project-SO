@@ -8,6 +8,7 @@
 #include "reports.h"
 #include<string.h>
 #include<dirent.h>
+#include<sys/wait.h>
 
 #define LENGTH 256
 #define SIZE_PATH 1024
@@ -437,5 +438,40 @@ void check_and_alert(int severity, const char *district) {
         printf("  [!] ALERT: HIGH SEVERITY DETECTED!\n");
         printf("  Report Severity: %d | Threshold: %d\n", severity, threshold);
         printf("****************************************\n\n");
+    }
+}
+
+void remove_district(const char* district_id) {
+    
+    
+    if (strstr(district_id,".") != NULL || strstr(district_id,"/") != NULL) {
+        return;
+    }
+    
+    char dir_path[256];
+    char link_path[256];
+    snprintf(link_path,sizeof(link_path),"active_reports-%s",district_id);
+    int pid = fork();
+    if(pid < 0) {
+        perror("Fork failed");
+        return;
+    }
+    if(pid == 0) {
+               
+               execlp("rm","rm","-rf",district_id,NULL);   
+    perror("execlp failed");
+    exit(1);
+    }  else {
+        int status = 0;
+        waitpid(pid,&status,0);
+        if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+            if(unlink(link_path) == 0) {
+                printf("District %s and its link removed successfully\n",district_id);
+            }else {
+                    perror("Something failde at deleting symbolic link");
+            }
+        } else {
+            printf("Failed to delete the specified directory %s\n", district_id);
+        }
     }
 }

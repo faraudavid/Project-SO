@@ -17,4 +17,5 @@ void filter_reposts(const char *district_id, int argc, char *argv[]);
 int get_threshold(const char *district);
 void check_and_alert(int severity, const char *district);
 int get_id(const char *district);
+void remove_district(const char *district_id);
 #endif
