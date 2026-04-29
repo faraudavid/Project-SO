@@ -13,6 +13,8 @@
 #define LENGTH 256
 #define SIZE_PATH 1024
 #define DEFAULT_SEVERITY 4
+#define PID_FILE ".monitor_pid"
+
 
 void setup_links(const char *base_dir) {
     DIR *dir = opendir(base_dir);
@@ -129,6 +131,29 @@ int init_district(const char *district_name) {
     return 0;
 } 
 
+static int notify_monitor(void) {
+    int fd = open(PID_FILE,O_RDONLY);
+    if(fd == -1) {
+        return -1;
+    }
+    char buff [16] = {0};
+    ssize_t n = read(fd,buff,sizeof(buff));
+    close(fd);
+
+    if(n <= 0)
+        return -1;
+    
+    pid_t monitor_pid = (pid_t)atoi(buff);
+    if (monitor_pid <= 0)
+        return -1;
+
+    if(kill(monitor_pid,SIGUSR1) == -1)
+        return -2;
+
+
+    return 0;
+}
+
 int add_report(const char *district_name,Report *new_report,const char *user,const char *role) {
     char file_path[LENGTH];
 
@@ -161,6 +186,26 @@ int add_report(const char *district_name,Report *new_report,const char *user,con
     log_operation(district_name,details,role,user,"ADD");
     close(fd);
     printf("Report %d added successfully \n",new_report->id);
+    int rc = notify_monitor();
+    char log_path[SIZE_PATH];
+    snprintf(log_path,sizeof(log_path),"%s/logged_district",district_name);
+    int lfd = open(log_path,O_WRONLY|O_APPEND|O_CREAT,0644);
+    if(lfd != -1) {
+        time_t now = time(NULL);
+        char *ts = ctime(&now);
+        if(ts) ts[strlen(ts) - 1] ='\0';
+
+        if(rc == 0) {
+            dprintf(lfd,
+                    "[%s] MONITOR notified successfully (SIGUSR1 sent) for report %d\n",
+                    ts, new_report->id);
+
+        } else {
+            dprintf(lfd,"MONITOR could not be informed of report");
+
+        }
+        close(lfd);
+    }
     return 0;
 }
 void permission_converter(mode_t mode) {
