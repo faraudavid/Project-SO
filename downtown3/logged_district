@@ -3,3 +3,8 @@
 [Wed Apr 29 16:17:16 2026] DETAILS ADDED report 1 |ROLE manager | USER alice | OP ADD
 [Wed Apr 29 16:17:16 2026] MONITOR notified successfully (SIGUSR1 sent) for report 1
 [Wed Apr 29 16:18:03 2026] DETAILS LIST downtown3  |ROLE manager | USER alice | OP LIST
+[Wed Apr 29 16:33:08 2026] DETAILS VIEW report 0 |ROLE manager | USER alice | OP VIEW
+[Wed Apr 29 16:33:11 2026] DETAILS VIEW report 1 |ROLE manager | USER alice | OP VIEW
+[Wed Apr 29 16:33:54 2026] DETAILS REMOVED report 1 |ROLE manager | USER alice | OP REMOVE
+[Wed Apr 29 16:33:59 2026] DETAILS VIEW report 1 |ROLE manager | USER alice | OP VIEW
+[Wed Apr 29 16:34:08 2026] DETAILS LIST downtown3  |ROLE manager | USER alice | OP LIST
