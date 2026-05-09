@@ -520,3 +520,4 @@ void remove_district(const char* district_id) {
         }
     }
 }
+
