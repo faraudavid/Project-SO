@@ -11,6 +11,7 @@
 
 #define BUFF_SIZE  1024
 #define FIFO_PATH  "/tmp/.monitor_fifo"
+#define PID_FILE   "/tmp/.monitor_pid"
 
 int read_line(int fd, char *buf, int maxlen) {
     int i = 0;
@@ -70,9 +71,35 @@ void handle_scorer(int argc_count, char **args) {
 }
 
 void run_hub_mon(void) {
+   
     /* hub_mon ignoră SIGINT — monitorul face cleanup */
     signal(SIGINT, SIG_IGN);
 
+     int fd = open(PID_FILE,O_RDONLY);
+    if(fd != -1) {
+        char pid_str[16];
+        int n = read(fd,pid_str,sizeof(pid_str)-1);
+        close(fd);
+        if(n > 0) {
+            pid_str[n] = '\0';
+            pid_t existing_pid =(pid_t)atoi(pid_str);
+            if(kill(existing_pid,0) ==0) {
+                write(STDOUT_FILENO, "[HUB_MON] MSG:Monitor deja activ (PID ", 38);
+                write(STDOUT_FILENO, pid_str, strlen(pid_str));
+                write(STDOUT_FILENO, "). Astept oprirea...\n", 22);
+                
+                // Așteptăm activ închiderea procesului
+                while (kill(existing_pid, 0) == 0) {
+                    sleep(2);
+                }
+                write(STDOUT_FILENO, "[HUB_MON] MSG:Monitorul vechi s-a inchis. Puteti lansa unul nou.\n", 65);
+                unlink(FIFO_PATH);
+                exit(0);
+            }
+        }
+    }
+
+  
     /* ── Creează FIFO dacă nu există ── */
     mkfifo(FIFO_PATH, 0644);
 
@@ -85,7 +112,7 @@ void run_hub_mon(void) {
 
     if (monitor_pid == 0) {
         /* proces monitor — rulează standalone, va deschide FIFO singur */
-        execlp("./monitor", "monitor", (char *)NULL);
+        execlp("./monitor_reports", "monitor_reports", (char *)NULL);
         perror("execlp monitor_reports");
         exit(2);
     }
@@ -114,7 +141,7 @@ void run_hub_mon(void) {
             ended = 1;
             break;
         } else if (strncmp(line, "END:", 4) == 0) {
-            write(STDOUT_FILENO, "\n[HUB_MON] Monitor has ended. You can start a new monitor.\n", 59);
+            write(STDOUT_FILENO, "\n[HUB_MON] Monitor has ended.\n", 59);
             ended = 1;
             break;
         } else if (strncmp(line, "MSG:", 4) == 0) {

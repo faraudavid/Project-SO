@@ -13,7 +13,7 @@
 #define LENGTH 256
 #define SIZE_PATH 1024
 #define DEFAULT_SEVERITY 4
-#define PID_FILE ".monitor_pid"
+#define PID_FILE  "/tmp/.monitor_pid"
 
 
 void setup_links(const char *base_dir) {

@@ -21,8 +21,8 @@ void handle_sigint(int sig) {
 
 void handle_sigusr1(int sig) {
     const char msg[] = "MSG:Notification received. A new report has been added\n";
-    if (fifo_fd != -1)
-        write(fifo_fd, msg, sizeof(msg) - 1);
+    int out = (fifo_fd != -1) ? fifo_fd : STDOUT_FILENO;
+    write(out, msg, sizeof(msg) - 1);
 }
 
 int main(void) {
@@ -35,10 +35,12 @@ int main(void) {
         if (bytes > 0) {
             existing_pid[bytes] = '\0';
             pid_t pid = (pid_t)atoi(existing_pid);
+
             if (kill(pid, 0) == 0 || errno == EPERM) {
                 /* scrie eroarea în FIFO dacă există, altfel stdout */
                 int efd = open(FIFO_PATH, O_WRONLY | O_NONBLOCK);
                 int out = (efd != -1) ? efd : STDOUT_FILENO;
+
                 write(out, "ERROR:Monitor already running with PID ", 39);
                 write(out, existing_pid, strlen(existing_pid));
                 write(out, "\n", 1);
@@ -105,7 +107,7 @@ int main(void) {
 
     /* ── Cleanup ── */
     unlink(PID_FILE);
-    write(out, "END:Monitor finished. Goodbye.\n", 31);
+    write(out, "\nEND:Monitor finished. Goodbye.\n", 31);
 
     if (fifo_fd != -1) close(fifo_fd);
 
