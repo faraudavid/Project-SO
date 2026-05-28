@@ -7,3 +7,4 @@
 [Sat Apr 25 10:55:13 2026] DETAILS UPDATED  downtown5 |ROLE manager | USER 1 | OP UPDATE
 [Sat Apr 25 10:55:17 2026] DETAILS UPDATED  downtown5 |ROLE manager | USER alice | OP UPDATE
 [Wed Apr 29 16:34:48 2026] DETAILS LIST downtown5  |ROLE manager | USER alice | OP LIST
+[Thu May 28 14:05:59 2026] DETAILS LIST downtown5  |ROLE --inspector | USER bob | OP LIST

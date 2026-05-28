@@ -1,1 +1,7 @@
 [Wed Apr 29 16:34:46 2026] DETAILS LIST downtown  |ROLE manager | USER alice | OP LIST
+[Thu May 28 13:20:37 2026] DETAILS ADDED report 102 |ROLE manager | USER alice | OP ADD
+MONITOR could not be informed of report[Thu May 28 14:03:17 2026] DETAILS LIST downtown  |ROLE --inspector | USER bob | OP LIST
+[Thu May 28 14:04:20 2026] DETAILS REMOVED report 102 |ROLE manager | USER alice | OP REMOVE
+[Thu May 28 14:04:25 2026] DETAILS LIST downtown  |ROLE --inspector | USER bob | OP LIST
+[Thu May 28 14:15:59 2026] DETAILS ADDED report 102 |ROLE manager | USER alice | OP ADD
+[Thu May 28 14:15:59 2026] MONITOR notified successfully (SIGUSR1 sent) for report 102

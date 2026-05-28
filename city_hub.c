@@ -141,7 +141,7 @@ void run_hub_mon(void) {
             ended = 1;
             break;
         } else if (strncmp(line, "END:", 4) == 0) {
-            write(STDOUT_FILENO, "\n[HUB_MON] Monitor has ended.\n", 59);
+            write(STDOUT_FILENO, "\n[HUB_MON] Monitor has ended.\n", 30);
             ended = 1;
             break;
         } else if (strncmp(line, "MSG:", 4) == 0) {
